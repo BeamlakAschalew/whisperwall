@@ -1,0 +1,7 @@
+{
+    "1000": "authentication successful",
+    "1001": "signup successful",
+    "2001": "invalid json content",
+    "2002": "database connection error",
+    "2003": "sql exception error"
+}
