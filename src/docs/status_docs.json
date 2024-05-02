@@ -3,5 +3,15 @@
     "1001": "signup successful",
     "2001": "invalid json content",
     "2002": "database connection error",
-    "2003": "sql exception error"
+    "2003": "sql execution error",
+    "2004": "cannot decrypt password",
+    "3001": "username already exists",
+    "3002": "phone number already exists",    
+    "3003": "no user found",
+    "3004": "incorrect password",
+    "3005": "login successful",
+    "3006": "signup successful",
+    "3007": "unable to generate hash",
+    "3008": "unable to encrypt password",
+    "3009": "unable to compare passwords"
 }

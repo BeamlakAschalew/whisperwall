@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import { signupUser } from "./src/services/user.service";
 import { logger } from "./src/services/logger";
+import { userRouter } from "./src/routes/user.router";
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Welcome to Express & TypeScript Server");
 });
 
-app.post("/signup", signupUser);
+app.use("/user", userRouter);
 
 app.use((err: any, req: Request, res: Response, next: any) => {
   logger.error(`[${new Date().toISOString()}] ${err.stack}`);

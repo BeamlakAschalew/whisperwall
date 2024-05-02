@@ -18,9 +18,11 @@ class Status {
 class ResponseInstance {
   status: Status;
   message: string;
-  constructor(status: Status, message: string) {
+  data?: object | null;
+  constructor(status: Status, message: string, data?: object | null) {
     this.status = status;
     this.message = message;
+    this.data = data;
   }
 }
 

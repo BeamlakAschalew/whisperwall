@@ -16,4 +16,4 @@ const pool: mysql.PoolOptions = {
   keepAliveInitialDelay: 0,
 };
 
-export const connection: mysql.Pool = mysql.createPool(pool);
+export const database: mysql.Pool = mysql.createPool(pool);
