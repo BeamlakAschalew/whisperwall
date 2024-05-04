@@ -1,6 +1,6 @@
 import express, { Router } from "express";
-import { signupUser } from "../middleware/users/signup";
-import { loginUser } from "../middleware/users/login";
+import { signupUser } from "../middleware/whisperers/signup";
+import { loginUser } from "../middleware/whisperers/login";
 
 const router: Router = express.Router();
 

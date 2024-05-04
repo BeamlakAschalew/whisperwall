@@ -11,6 +11,7 @@ CREATE TABLE whisperers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(200) NOT NULL,
     gender ENUM('m', 'f', 'u') DEFAULT 'u',
+    telegram_username TEXT,
     status ENUM('0', '1', '2') DEFAULT '0'
 );
 
@@ -26,6 +27,8 @@ CREATE TABLE whispers (
     primary_wall_id INT,
     whisper_content TEXT,
     whispered_at TIMESTAMP,
+    up_karma INT DEFAULT 0,
+    down_karma INT DEFAULT 0,
     FOREIGN KEY (whisperer_id) REFERENCES whisperers(id),
     FOREIGN KEY (primary_wall_id) REFERENCES walls(id)
 );
@@ -47,6 +50,8 @@ CREATE TABLE whisper_comments (
     FOREIGN KEY (commentor_id) REFERENCES users(id),
     FOREIGN KEY (whisper_id) REFERENCES whispers(id)
 );
+
+CREATE TABLE whisper_karma (karma_id INT AUTO_INCREMENT, whisper_id INT, karma_type ENUM('1','-1'), awarder INT, PRIMARY KEY (karma_id, whisper_id), FOREIGN KEY (whisper_id) REFERENCES whispers (id), FOREIGN KEY (awarder) REFERENCES whisperers(id));
 
 CREATE PROCEDURE SignupUser (
     IN p_full_name VARCHAR(60),
@@ -103,4 +108,113 @@ BEGIN
         END IF;
     END IF;
 
+END
+
+-- NOT TO BE USED
+CREATE PROCEDURE InsertWhisper(
+    IN in_primary_wall_id INT,
+    IN in_whisperer_id INT,
+    IN in_whisper_content TEXT,
+    IN in_whisper_wall_insert TEXT
+)
+BEGIN
+    -- Declare and initialize variables for status
+    DECLARE whisper_status INT DEFAULT 0;
+    DECLARE whisper_wall_status INT DEFAULT 0;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred, changes rolled back.';
+    END;
+
+    START TRANSACTION;
+    
+    -- Insert into whispers table
+    INSERT INTO whispers (whisperer_id, primary_wall_id, whisper_content)
+    VALUES (in_whisperer_id, in_primary_wall_id, in_whisper_content);
+    
+    -- Update status variables
+    SET whisper_status = 1;
+    
+    -- Execute additional insert statement provided
+    SET @query = in_whisper_wall_insert;
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Update status variables
+    SET whisper_wall_status = 1;
+    
+    COMMIT;
+    
+    -- Return status
+    SELECT whisper_status, whisper_wall_status;
+END
+
+-------------------
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertWhisper`(
+    IN in_primary_wall_id INT,
+    IN in_whisperer_id INT,
+    IN in_whisper_content TEXT
+)
+BEGIN
+    -- Declare and initialize variables for status and last inserted ID
+    DECLARE whisper_status INT DEFAULT 0;
+    DECLARE last_whisper_id INT;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred, changes rolled back.';
+    END;
+
+    START TRANSACTION;
+    
+    -- Insert into whispers table
+    INSERT INTO whispers (whisperer_id, primary_wall_id, whisper_content)
+    VALUES (in_whisperer_id, in_primary_wall_id, in_whisper_content);
+    
+    -- Get the last inserted ID
+    SET last_whisper_id = LAST_INSERT_ID();
+    
+    -- Update status variable
+    SET whisper_status = 1;
+    
+    COMMIT;
+    
+    -- Return status and last inserted ID
+    SELECT whisper_status, last_whisper_id AS last_inserted_id;
+END;
+
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertWhisperWall`(
+    IN in_whisper_wall_insert TEXT
+)
+BEGIN
+    -- Declare and initialize variables for status
+    DECLARE whisper_wall_status INT DEFAULT 0;
+    
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred, changes rolled back.';
+    END;
+
+    START TRANSACTION;
+    
+    -- Execute additional insert statement provided
+    SET @query = in_whisper_wall_insert;
+    PREPARE stmt FROM @query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
+    -- Update status variables
+    SET whisper_wall_status = 1;
+    
+    COMMIT;
+    
+    -- Return status
+    SELECT whisper_wall_status;
 END

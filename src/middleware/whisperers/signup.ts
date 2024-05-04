@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, request } from "express";
 import { userSignupSchema } from "../../services/signup_validation";
 import { database } from "../../database";
 import { logger } from "../../services/logger";
@@ -6,28 +6,25 @@ import { ResponseInstance, Status } from "../../models/response";
 import bcrypt from "bcryptjs";
 
 export const signupUser = (req: Request, res: Response) => {
-  const validateUserInfo = () => {
-    return new Promise((resolve, reject) => {
-      let error = userSignupSchema.validate(req.body);
-
-      if (error.error) {
-        logger.error(`[${new Date().toISOString()}] ${error.error}`);
-        reject(
-          new ResponseInstance(
-            new Status("2001"),
-            error.error.details[0].message
-          )
-        );
-      } else {
-        resolve(req.body);
-      }
-    });
-  };
-
-  validateUserInfo()
+  validateUserInfo(req)
     .then((body) => encryptPassword(body).then((data) => insertIntoDB(body)))
     .then((data) => res.send(data))
     .catch((error) => res.send(error));
+};
+
+const validateUserInfo = (req: Request) => {
+  return new Promise((resolve, reject) => {
+    let error = userSignupSchema.validate(req.body);
+
+    if (error.error) {
+      logger.error(`[${new Date().toISOString()}] ${error.error}`);
+      reject(
+        new ResponseInstance(new Status("2001"), error.error.details[0].message)
+      );
+    } else {
+      resolve(req.body);
+    }
+  });
 };
 
 const encryptPassword = (req: any): Promise<any> => {

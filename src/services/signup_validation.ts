@@ -5,7 +5,8 @@ export const userSignupSchema = Joi.object({
   password: Joi.string().min(8).required(),
   email: Joi.string().required(),
   username: Joi.string().min(5).max(30).required(),
-  bio: Joi.string().max(150),
-  dob: Joi.string(),
+  bio: Joi.string().max(150).optional(),
+  dob: Joi.string().optional(),
   gender: Joi.string().min(1).max(1).required(),
+  telegram_username: Joi.string().optional(),
 });

@@ -7,31 +7,28 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const loginUser = (req: Request, res: Response) => {
-  const validateUserInfo = () => {
-    return new Promise((resolve, reject) => {
-      let error = userLoginSchema.validate(req.body);
-
-      if (error.error) {
-        logger.error(`[${new Date().toISOString()}] ${error.error}`);
-        reject(
-          new ResponseInstance(
-            new Status("2001"),
-            error.error.details[0].message
-          )
-        );
-      } else {
-        resolve(req.body);
-      }
-    });
-  };
-
-  validateUserInfo()
+  validateUserInfo(req)
     .then((data) =>
       getUserByUsername(data).then((data) =>
         checkPassword(data).then((data) => finalizeLogin(data, res))
       )
     )
     .catch((error) => res.send(error));
+};
+
+const validateUserInfo = (req: Request) => {
+  return new Promise((resolve, reject) => {
+    let error = userLoginSchema.validate(req.body);
+
+    if (error.error) {
+      logger.error(`[${new Date().toISOString()}] ${error.error}`);
+      reject(
+        new ResponseInstance(new Status("2001"), error.error.details[0].message)
+      );
+    } else {
+      resolve(req.body);
+    }
+  });
 };
 
 const getUserByUsername = (req: any): Promise<any> => {
@@ -50,6 +47,7 @@ const getUserByUsername = (req: any): Promise<any> => {
         const value = req.username;
 
         connection.query(sql, value, (error, result, fields) => {
+          connection.release();
           if (error) {
             logger.error(`[${new Date().toISOString()}] ${error}`);
             reject(
