@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { logger } from "./src/services/logger";
 import { userRouter } from "./src/routes/user.router";
 import { generateWhisperWallQuery } from "./src/middleware/whispers/post_whisper";
+import { whisperRouter } from "./src/routes/whisper.router";
 
 dotenv.config();
 
@@ -18,14 +19,10 @@ app.use((req, res, next) => {
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Welcome to Express & TypeScript Server");
-  generateWhisperWallQuery({
-    walls: [1, 2, 3, 4],
-    primary_wall_id: 7,
-    whisper_id: 56,
-  });
 });
 
 app.use("/user", userRouter);
+app.use("/whisper", whisperRouter);
 
 app.use((err: any, req: Request, res: Response, next: any) => {
   logger.error(`[${new Date().toISOString()}] ${err.stack}`);

@@ -13,5 +13,7 @@
     "3006": "signup successful",
     "3007": "unable to generate hash",
     "3008": "unable to encrypt password",
-    "3009": "unable to compare passwords"
+    "3009": "unable to compare passwords",
+    "4001": "post successful",
+    "4002": "post failed"
 }

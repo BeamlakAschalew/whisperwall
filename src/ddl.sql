@@ -26,7 +26,7 @@ CREATE TABLE whispers (
     whisperer_id INT,
     primary_wall_id INT,
     whisper_content TEXT,
-    whispered_at TIMESTAMP,
+    whispered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     up_karma INT DEFAULT 0,
     down_karma INT DEFAULT 0,
     FOREIGN KEY (whisperer_id) REFERENCES whisperers(id),
@@ -167,7 +167,7 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred, changes rolled back.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An error occurred while posting whisper';
     END;
 
     START TRANSACTION;
@@ -186,7 +186,7 @@ BEGIN
     
     -- Return status and last inserted ID
     SELECT whisper_status, last_whisper_id AS last_inserted_id;
-END;
+END
 
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `InsertWhisperWall`(
