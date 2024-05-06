@@ -3,12 +3,17 @@ import { whisperSchema } from "../../services/whisper_validation";
 import { logger } from "../../services/logger";
 import { ResponseInstance, Status } from "../../models/response";
 import { database } from "../../database";
+import { checkToken, tokenAuth } from "../auth/authenticate_user";
 
 export const postWhisper = (req: Request, res: Response) => {
-  validateWhisper(req.body)
+  checkToken(req)
     .then((data) =>
-      insertWhisper(data).then((data) =>
-        generateWhisperWallQuery(data).then((data) => res.send(data))
+      tokenAuth(data, req).then((data) =>
+        validateWhisper(req.body).then((data) =>
+          insertWhisper(data).then((data) =>
+            generateWhisperWallQuery(data).then((data) => res.send(data))
+          )
+        )
       )
     )
     .catch((error) => res.send(error));
@@ -108,7 +113,7 @@ export const generateWhisperWallQuery = (body: any) => {
             const r = result as any;
 
             if (r[0][0].whisper_wall_status !== 1) {
-              reject(new ResponseInstance(new Status("4002"), ""));
+              reject(new ResponseInstance(new Status("4002"), "post failed"));
             } else {
               resolve(
                 new ResponseInstance(new Status("4001"), `post successful`)

@@ -109,6 +109,7 @@ const finalizeLogin = (data: any, res: Response) => {
     email: data.databaseData.email,
     gender: data.databaseData.gender,
     status: data.databaseData.status,
+    id: data.databaseData.id,
   };
 
   const auth_token = jwt.sign(filteredData, "WHISPERWALL");

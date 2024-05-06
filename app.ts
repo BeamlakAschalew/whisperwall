@@ -2,7 +2,6 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { logger } from "./src/services/logger";
 import { userRouter } from "./src/routes/user.router";
-import { generateWhisperWallQuery } from "./src/middleware/whispers/post_whisper";
 import { whisperRouter } from "./src/routes/whisper.router";
 
 dotenv.config();
@@ -18,7 +17,7 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Welcome to Express & TypeScript Server");
+  res.send("WHATCHU LOOKIN AT NIGGA");
 });
 
 app.use("/user", userRouter);

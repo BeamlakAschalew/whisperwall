@@ -12,7 +12,10 @@ CREATE TABLE whisperers (
     email VARCHAR(200) NOT NULL,
     gender ENUM('m', 'f', 'u') DEFAULT 'u',
     telegram_username TEXT,
-    status ENUM('0', '1', '2') DEFAULT '0'
+    status ENUM('0', '1', '2') DEFAULT '0',
+    up_karma INT DEFAULT 0,
+    down_karma INT DEFAULT 0,
+    acceptance DECIMAL(3, 2)
 );
 
 CREATE TABLE walls (
@@ -24,34 +27,55 @@ CREATE TABLE walls (
 CREATE TABLE whispers (
     id INT PRIMARY KEY AUTO_INCREMENT,
     whisperer_id INT,
+    in_reference INT,
     primary_wall_id INT,
     whisper_content TEXT,
     whispered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     up_karma INT DEFAULT 0,
     down_karma INT DEFAULT 0,
-    FOREIGN KEY (whisperer_id) REFERENCES whisperers(id),
-    FOREIGN KEY (primary_wall_id) REFERENCES walls(id)
+    FOREIGN KEY (whisperer_id) REFERENCES whisperers(id) ON DELETE CASCADE,
+    FOREIGN KEY (primary_wall_id) REFERENCES walls(id) ON DELETE CASCADE,
+    FOREIGN KEY (in_reference) REFERENCES whispers(id) ON DELETE SET NULL
 );
 
-CREATE TABLE whisper_walls (
-    whisper_id INT,
-    wall_id INT,
-    PRIMARY KEY (whisper_id, wall_id),
-    FOREIGN KEY (whisper_id) REFERENCES whispers(id),
-    FOREIGN KEY (wall_id) REFERENCES walls(id)
-);
+CREATE TABLE whisper_walls (id INT PRIMARY KEY AUTO_INCREMENT, 
+    whisper_id INT, 
+    wall_id INT, 
+    FOREIGN KEY (whisper_id) REFERENCES whispers(id) ON DELETE CASCADE, 
+    FOREIGN KEY (wall_id) REFERENCES walls(id) ON DELETE CASCADE
+); 
 
 CREATE TABLE whisper_comments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     commentor_id INT,
+    in_reference INT,
     comment TEXT,
     whisper_id INT,
     comment_time TIMESTAMP,
-    FOREIGN KEY (commentor_id) REFERENCES users(id),
-    FOREIGN KEY (whisper_id) REFERENCES whispers(id)
+    FOREIGN KEY (commentor_id) REFERENCES whisperers(id) ON DELETE CASCADE,
+    FOREIGN KEY (whisper_id) REFERENCES whispers(id) ON DELETE CASCADE,
+    FOREIGN KEY (in_reference) REFERENCES whispers(id) ON DELETE SET NULL
 );
 
-CREATE TABLE whisper_karma (karma_id INT AUTO_INCREMENT, whisper_id INT, karma_type ENUM('1','-1'), awarder INT, PRIMARY KEY (karma_id, whisper_id), FOREIGN KEY (whisper_id) REFERENCES whispers (id), FOREIGN KEY (awarder) REFERENCES whisperers(id));
+CREATE TABLE whisper_karma (
+    karma_id INT AUTO_INCREMENT, 
+    whisper_id INT, 
+    karma_type ENUM('1','-1'), 
+    awarder INT, PRIMARY KEY (karma_id, whisper_id),
+    awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    FOREIGN KEY (whisper_id) REFERENCES whispers(id) ON DELETE CASCADE, 
+    FOREIGN KEY (awarder) REFERENCES whisperers(id) ON DELETE CASCADE
+);
+
+CREATE TABLE comment_karma (
+    karma_id INT AUTO_INCREMENT,
+    comment_id INT,
+    karma_type ENUM('1','-1'), 
+    awarder INT, PRIMARY KEY (karma_id, comment_id),
+    awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    FOREIGN KEY (comment_id) REFERENCES whisper_comments(id) ON DELETE CASCADE, 
+    FOREIGN KEY (awarder) REFERENCES whisperers(id) ON DELETE CASCADE
+);
 
 CREATE PROCEDURE SignupUser (
     IN p_full_name VARCHAR(60),
@@ -218,3 +242,84 @@ BEGIN
     -- Return status
     SELECT whisper_wall_status;
 END
+
+
+-- dbdiagram.io code:
+
+-- // Use DBML to define your database structure
+-- // Docs: https://dbml.dbdiagram.io/docs
+
+-- Table whisperers {
+--   id integer [primary key]
+--   full_name varchar
+--   username varchar
+--   password varchar
+--   bio varchar
+--   dob date
+--   created_at timestamp
+--   email varchar
+--   gender enum
+--   status enum
+--   telegram_username varchar
+--   up_karma int
+--   down_karma integer
+--   acceptance double
+-- }
+
+-- Table walls {
+--   id integer [primary key]
+--   wall_name varchar
+--   wall_color varchar
+-- }
+
+-- Table whispers {
+--   id integer [primary key]
+--   whisperer_id integer
+--   primary_wall_id integer
+--   whisper_content text
+--   whispered_at timestamp
+--   up_karma integer
+--   down_karma integer
+--   comment_count integer
+-- }
+
+-- Table whisper_walls {
+--   id integer [primary key]
+--   whisper_id integer
+--   wall_id int 
+-- }
+
+-- Table whisper_comments {
+--   id integer [primary key]
+--   commentor_id integer
+--   comment text
+--   whisper_id integer
+--   comment_time timestamp
+-- }
+
+-- Table whisper_karma {
+--   karma_id integer [primary key]
+--   whisper_id integer
+--   karma_type enum
+--   awarder integer
+--   awarded_at timestamp
+-- }
+
+-- Table comment_karma {
+--   karma_id integer [primary key]
+--   comment_id integer
+--   karma_type enum
+--   awarder integer
+--   awarder_at timestamp
+-- }
+
+-- Ref: whisperers.id < whispers.id
+-- Ref: whispers.primary_wall_id < walls.id
+-- Ref: whisper_walls.wall_id > walls.id
+-- Ref: whisper_comments.whisper_id < whispers.id
+-- Ref: whispers.id < whisper_walls.whisper_id
+-- Ref: whisper_comments.commentor_id > whisperers.id
+-- Ref: whisper_karma.whisper_id > whispers.id
+-- Ref: whisper_karma.awarder > whisperers.id
+-- Ref: comment_karma.comment_id > whisper_comments.id
+-- Ref: comment_karma.awarder > whisperers.id

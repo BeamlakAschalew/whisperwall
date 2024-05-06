@@ -15,5 +15,8 @@
     "3008": "unable to encrypt password",
     "3009": "unable to compare passwords",
     "4001": "post successful",
-    "4002": "post failed"
+    "4002": "post failed",
+    "4003": "provide token",
+    "4004": "provide username",
+    "4005": "unauthenticated user"
 }
