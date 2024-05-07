@@ -2,7 +2,7 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { logger } from "./src/services/logger";
 import { userRouter } from "./src/routes/user.router";
-import { whisperRouter } from "./src/routes/whisper.router";
+import { whisperRouter, whispersRouter } from "./src/routes/whisper.router";
 
 dotenv.config();
 
@@ -21,6 +21,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/user", userRouter);
+app.use("/whispers", whispersRouter);
 app.use("/whisper", whisperRouter);
 
 app.use((err: any, req: Request, res: Response, next: any) => {

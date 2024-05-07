@@ -1,8 +1,12 @@
 import express, { Router } from "express";
 import { postWhisper } from "../middleware/whispers/post_whisper";
+import { getTopToday } from "../middleware/whisperers/get_top_today";
 
-const router: Router = express.Router();
+const whisperRouterR: Router = express.Router();
+const whispersRouterR: Router = express.Router();
 
-router.post("/post", postWhisper);
+whisperRouterR.post("/post", postWhisper);
+whispersRouterR.get("/top/today", getTopToday);
 
-export const whisperRouter: Router = router;
+export const whisperRouter: Router = whisperRouterR,
+  whispersRouter: Router = whispersRouterR;

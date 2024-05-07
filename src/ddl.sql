@@ -33,6 +33,7 @@ CREATE TABLE whispers (
     whispered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     up_karma INT DEFAULT 0,
     down_karma INT DEFAULT 0,
+    view_count INT,
     FOREIGN KEY (whisperer_id) REFERENCES whisperers(id) ON DELETE CASCADE,
     FOREIGN KEY (primary_wall_id) REFERENCES walls(id) ON DELETE CASCADE,
     FOREIGN KEY (in_reference) REFERENCES whispers(id) ON DELETE SET NULL
@@ -52,6 +53,7 @@ CREATE TABLE whisper_comments (
     comment TEXT,
     whisper_id INT,
     comment_time TIMESTAMP,
+    view_count INT,
     FOREIGN KEY (commentor_id) REFERENCES whisperers(id) ON DELETE CASCADE,
     FOREIGN KEY (whisper_id) REFERENCES whispers(id) ON DELETE CASCADE,
     FOREIGN KEY (in_reference) REFERENCES whispers(id) ON DELETE SET NULL
@@ -342,3 +344,50 @@ LEFT JOIN (
     GROUP BY whisper_id
 ) karma_totals ON w.id = karma_totals.whisper_id
 ORDER BY IFNULL(total_up_karma, 0) DESC LIMIT 15 OFFSET 0;
+
+-- Top today procedure
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetTopToday`(IN page INT)
+BEGIN
+	DECLARE offset INT;
+    DECLARE has_next_page INT;
+	DECLARE total_rows INT;
+    
+    IF page = 1 THEN
+		SET offset = 0;
+	ELSE
+		SET offset = (page - 1) * 10;
+	END IF;
+    
+    DROP TEMPORARY TABLE IF EXISTS results;
+    
+	CREATE TEMPORARY TABLE results SELECT w.*,
+       IFNULL(total_up_karma, 0) AS total_up_karma,
+       IFNULL(total_down_karma, 0) AS total_down_karma,
+       IFNULL(total_up_karma, 0) - IFNULL(total_down_karma, 0) AS net_karma
+	FROM whispers w
+	LEFT JOIN (
+		SELECT 
+			whisper_id, 
+			SUM(CASE WHEN karma_type = '1' THEN 1 ELSE 0 END) AS total_up_karma,
+			SUM(CASE WHEN karma_type = '-1' THEN 1 ELSE 0 END) AS total_down_karma
+		FROM whisper_karma
+		WHERE DATE(awarded_at) = CURDATE()
+		GROUP BY whisper_id
+	) karma_totals ON w.id = karma_totals.whisper_id
+	ORDER BY IFNULL(total_up_karma, 0) DESC LIMIT 15 OFFSET offset;
+    
+    ALTER TABLE results MODIFY COLUMN total_up_karma INT;
+    ALTER TABLE results MODIFY COLUMN total_down_karma INT;
+    ALTER TABLE results MODIFY COLUMN net_karma INT;
+    
+    SELECT COUNT(*) INTO total_rows FROM results;
+    
+	IF page * 10 > total_rows THEN
+		SET has_next_page = 0;
+	ELSE
+		SET has_next_page = 1;
+	END IF;
+    
+    SELECT has_next_page As has_next;
+    SELECT * FROM results;
+END

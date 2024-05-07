@@ -18,5 +18,6 @@
     "4002": "post failed",
     "4003": "provide token",
     "4004": "provide username",
-    "4005": "unauthenticated user"
+    "4005": "unauthenticated user",
+    "5001": "error getting top whispers today"
 }
