@@ -58,13 +58,14 @@ CREATE TABLE whisper_comments (
 );
 
 CREATE TABLE whisper_karma (
-    karma_id INT AUTO_INCREMENT, 
+    karma_id INT AUTO_INCREMENT PRIMARY KEY, 
     whisper_id INT, 
     karma_type ENUM('1','-1'), 
-    awarder INT, PRIMARY KEY (karma_id, whisper_id),
+    awarder INT,
     awarded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     FOREIGN KEY (whisper_id) REFERENCES whispers(id) ON DELETE CASCADE, 
-    FOREIGN KEY (awarder) REFERENCES whisperers(id) ON DELETE CASCADE
+    FOREIGN KEY (awarder) REFERENCES whisperers(id) ON DELETE CASCADE,
+    CONSTRAINT unique_whisperer_karma UNIQUE (whisper_id, awarder)
 );
 
 CREATE TABLE comment_karma (
@@ -323,3 +324,21 @@ END
 -- Ref: whisper_karma.awarder > whisperers.id
 -- Ref: comment_karma.comment_id > whisper_comments.id
 -- Ref: comment_karma.awarder > whisperers.id
+
+
+-- Top today
+SELECT w.*,
+       IFNULL(total_up_karma, 0) AS total_up_karma,
+       IFNULL(total_down_karma, 0) AS total_down_karma,
+       IFNULL(total_up_karma, 0) - IFNULL(total_down_karma, 0) AS total_karma
+FROM whispers w
+LEFT JOIN (
+    SELECT 
+        whisper_id, 
+        SUM(CASE WHEN karma_type = '1' THEN 1 ELSE 0 END) AS total_up_karma,
+        SUM(CASE WHEN karma_type = '-1' THEN 1 ELSE 0 END) AS total_down_karma
+    FROM whisper_karma
+    WHERE DATE(awarded_at) = CURDATE()
+    GROUP BY whisper_id
+) karma_totals ON w.id = karma_totals.whisper_id
+ORDER BY IFNULL(total_up_karma, 0) DESC LIMIT 15 OFFSET 0;
