@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { logger } from "./src/services/logger";
 import { userRouter } from "./src/routes/user.router";
 import { whisperRouter, whispersRouter } from "./src/routes/whisper.router";
+import { database } from "./src/database";
 
 dotenv.config();
 
@@ -29,6 +30,11 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   res.status(500).send("Something went wrong.");
 });
 
-app.listen(port, () => {
+app.listen(port, async () => {
+  await database.getConnection((error, connection) => {
+    if (error) logger.error(`[${new Date().toISOString()}] ${error}`);
+    if (connection) console.log(`Database connected!`);
+    connection.release();
+  });
   console.log(`Server is running at port ${port}`);
 });

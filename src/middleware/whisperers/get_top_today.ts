@@ -23,7 +23,7 @@ const fetchData = (req: Request) => {
         );
       } else {
         const sql: string = "CALL GetTopToday(?)";
-        const value = req.query.page;
+        const value = req.query.page ?? 1;
 
         connection.query(sql, value, (error, result, fields) => {
           connection.release();
